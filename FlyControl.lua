@@ -341,6 +341,65 @@ setSpeedLabel(flySpeed)
 -- cleanup safety: if player leaves or script disabled, ensure objects removed
 player.AncestryChanged:Connect(function(_, parent)
     if not parent then
+    -- 🛡️ Chế độ Bảo Vệ (Hợp pháp) - thêm vào cuối script
+
+-- tạo nút Bảo Vệ
+local protectButton = Instance.new("TextButton")
+protectButton.Name = "ProtectButton"
+protectButton.Size = UDim2.new(0, 120, 0, 36)
+protectButton.Position = UDim2.new(0.5, -60, 1, -45)
+protectButton.AnchorPoint = Vector2.new(0.5, 1)
+protectButton.Text = "🛡️ Bảo vệ: TẮT"
+protectButton.Font = Enum.Font.SourceSansBold
+protectButton.TextSize = 16
+protectButton.BackgroundColor3 = Color3.fromRGB(80, 50, 50)
+protectButton.TextColor3 = Color3.fromRGB(255, 200, 200)
+protectButton.Parent = frame
+
+local protectCorner = Instance.new("UICorner")
+protectCorner.CornerRadius = UDim.new(0, 8)
+protectCorner.Parent = protectButton
+
+local protectOn = false
+
+-- hiệu ứng chuyển màu khi bật/tắt
+local function updateProtectButton()
+	if protectOn then
+		protectButton.BackgroundColor3 = Color3.fromRGB(50, 90, 50)
+		protectButton.TextColor3 = Color3.fromRGB(180, 255, 180)
+		protectButton.Text = "🟢 Bảo vệ: BẬT"
+	else
+		protectButton.BackgroundColor3 = Color3.fromRGB(80, 50, 50)
+		protectButton.TextColor3 = Color3.fromRGB(255, 200, 200)
+		protectButton.Text = "🔴 Bảo vệ: TẮT"
+	end
+end
+
+-- bật/tắt khi nhấn
+protectButton.MouseButton1Click:Connect(function()
+	protectOn = not protectOn
+	updateProtectButton()
+
+	local char = player.Character
+	if not char then return end
+	local humanoid = char:FindFirstChildOfClass("Humanoid")
+	if not humanoid then return end
+
+	if protectOn then
+		-- tắt chết (bảo vệ an toàn)
+		humanoid:SetStateEnabled(Enum.HumanoidStateType.Dead, false)
+		humanoid.MaxHealth = 999999
+		humanoid.Health = 999999
+	else
+		-- bật lại chết
+		humanoid:SetStateEnabled(Enum.HumanoidStateType.Dead, true)
+		humanoid.MaxHealth = 100
+		humanoid.Health = 100
+	end
+end)
+
+updateProtectButton()
+
         closeAll()
     end
 end)
