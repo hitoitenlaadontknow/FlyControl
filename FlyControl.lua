@@ -1,42 +1,42 @@
--- Fly Control with minimize, restore bar, maximize and close (LocalScript)
--- Put in StarterPlayerScripts
+-- 🕊️ Fly Control + God Mode GUI (Mobile + PC)
+-- Put in StarterPlayerScripts (LocalScript)
 
 local Players = game:GetService("Players")
 local UserInputService = game:GetService("UserInputService")
 local player = Players.LocalPlayer
 
--- character handling
+-- Character Handling
 local character = player.Character or player.CharacterAdded:Wait()
 local function getRoot()
-    character = player.Character or player.CharacterAdded:Wait()
-    return character:WaitForChild("HumanoidRootPart")
+	character = player.Character or player.CharacterAdded:Wait()
+	return character:WaitForChild("HumanoidRootPart")
 end
 
 local humanoidRootPart = getRoot()
 player.CharacterAdded:Connect(function(char)
-    character = char
-    humanoidRootPart = getRoot()
+	character = char
+	humanoidRootPart = getRoot()
 end)
 
--- state
+-- State
 local flying = false
 local flySpeed = 80
-local minSpeed, maxSpeed = 10, -1
-local disabled = false -- when true, script stops and GUI removed
+local minSpeed, maxSpeed = 10, 500
+local disabled = false
 local isMaximized = false
 local isMinimized = false
 
--- create main ScreenGui
+-- Create GUI
 local screenGui = Instance.new("ScreenGui")
 screenGui.Name = "FlyControlGUI"
 screenGui.ResetOnSpawn = false
 screenGui.Parent = player:WaitForChild("PlayerGui")
 
--- main frame
+-- Main Frame
 local frame = Instance.new("Frame")
 frame.Name = "MainFrame"
-frame.Size = UDim2.new(0, 260, 0, 110)
-frame.Position = UDim2.new(0.5, -130, 0.78, -55)
+frame.Size = UDim2.new(0, 260, 0, 140)
+frame.Position = UDim2.new(0.5, -130, 0.75, -55)
 frame.BackgroundColor3 = Color3.fromRGB(34,34,46)
 frame.Active = true
 frame.Draggable = true
@@ -44,10 +44,9 @@ frame.Parent = screenGui
 
 local uiCorner = Instance.new("UICorner"); uiCorner.CornerRadius = UDim.new(0,10); uiCorner.Parent = frame
 
--- header (title + control buttons)
+-- Header
 local header = Instance.new("Frame")
 header.Size = UDim2.new(1,0,0,28)
-header.Position = UDim2.new(0,0,0,0)
 header.BackgroundTransparency = 1
 header.Parent = frame
 
@@ -62,40 +61,28 @@ title.TextColor3 = Color3.fromRGB(230,230,230)
 title.TextXAlignment = Enum.TextXAlignment.Left
 title.Parent = header
 
--- minimize button "-"
-local btnMin = Instance.new("TextButton")
-btnMin.Size = UDim2.new(0, 28, 0, 20)
-btnMin.Position = UDim2.new(1, -92, 0, 4)
-btnMin.AnchorPoint = Vector2.new(0,0)
-btnMin.Text = "-"
-btnMin.Font = Enum.Font.SourceSansBold
-btnMin.TextSize = 18
-btnMin.BackgroundTransparency = 0.15
-btnMin.Parent = header
+-- Buttons
+local function makeBtn(txt, offset)
+	local b = Instance.new("TextButton")
+	b.Size = UDim2.new(0,28,0,20)
+	b.Position = UDim2.new(1, offset, 0, 4)
+	b.Text = txt
+	b.Font = Enum.Font.SourceSansBold
+	b.TextSize = 16
+	b.BackgroundTransparency = 0.15
+	b.BackgroundColor3 = Color3.fromRGB(60,60,70)
+	local c = Instance.new("UICorner", b); c.CornerRadius = UDim.new(0,5)
+	b.Parent = header
+	return b
+end
 
--- maximize button "□"
-local btnMax = Instance.new("TextButton")
-btnMax.Size = UDim2.new(0, 28, 0, 20)
-btnMax.Position = UDim2.new(1, -60, 0, 4)
-btnMax.Text = "□"
-btnMax.Font = Enum.Font.SourceSansBold
-btnMax.TextSize = 14
-btnMax.BackgroundTransparency = 0.15
-btnMax.Parent = header
+local btnMin = makeBtn("-", -92)
+local btnMax = makeBtn("□", -60)
+local btnClose = makeBtn("X", -32)
 
--- close button "X" (disable script)
-local btnClose = Instance.new("TextButton")
-btnClose.Size = UDim2.new(0, 28, 0, 20)
-btnClose.Position = UDim2.new(1, -32, 0, 4)
-btnClose.Text = "X"
-btnClose.Font = Enum.Font.SourceSansBold
-btnClose.TextSize = 14
-btnClose.BackgroundTransparency = 0.15
-btnClose.Parent = header
-
--- status & speed labels and input (body)
+-- Labels
 local statusLabel = Instance.new("TextLabel")
-statusLabel.Size = UDim2.new(1, -12, 0, 28)
+statusLabel.Size = UDim2.new(1,-12,0,28)
 statusLabel.Position = UDim2.new(0,6,0,36)
 statusLabel.BackgroundTransparency = 1
 statusLabel.Text = "Trạng thái: Đang Tắt"
@@ -106,7 +93,7 @@ statusLabel.TextXAlignment = Enum.TextXAlignment.Left
 statusLabel.Parent = frame
 
 local speedLabel = Instance.new("TextLabel")
-speedLabel.Size = UDim2.new(1, -12, 0, 18)
+speedLabel.Size = UDim2.new(1,-12,0,18)
 speedLabel.Position = UDim2.new(0,6,0,66)
 speedLabel.BackgroundTransparency = 1
 speedLabel.Text = "Tốc độ: "..tostring(flySpeed)
@@ -129,7 +116,7 @@ speedBox.Parent = frame
 
 local infoLabel = Instance.new("TextLabel")
 infoLabel.Size = UDim2.new(1, -12, 0, 18)
-infoLabel.Position = UDim2.new(0,6,0,86)
+infoLabel.Position = UDim2.new(0,6,0,94)
 infoLabel.BackgroundTransparency = 1
 infoLabel.Text = "Nhấn F để bật/tắt. Enter để lưu tốc độ."
 infoLabel.Font = Enum.Font.SourceSans
@@ -138,216 +125,28 @@ infoLabel.TextColor3 = Color3.fromRGB(160,160,160)
 infoLabel.TextXAlignment = Enum.TextXAlignment.Left
 infoLabel.Parent = frame
 
--- small restore GUI (shown when minimized)
+-- Restore GUI
 local restoreGui = Instance.new("ScreenGui")
 restoreGui.Name = "FlyRestoreGUI"
 restoreGui.ResetOnSpawn = false
 restoreGui.Parent = player:WaitForChild("PlayerGui")
 
 local restoreBtn = Instance.new("TextButton")
-restoreBtn.Name = "RestoreButton"
 restoreBtn.Size = UDim2.new(0, 120, 0, 36)
 restoreBtn.Position = UDim2.new(0.02, 0, 0.02, 0)
-restoreBtn.AnchorPoint = Vector2.new(0,0)
 restoreBtn.Text = "Fly - Show"
 restoreBtn.Font = Enum.Font.SourceSansBold
 restoreBtn.TextSize = 16
 restoreBtn.BackgroundColor3 = Color3.fromRGB(50,50,60)
 restoreBtn.TextColor3 = Color3.fromRGB(230,230,230)
-restoreBtn.Visible = false -- start hidden
+restoreBtn.Visible = false
 restoreBtn.Parent = restoreGui
+Instance.new("UICorner", restoreBtn).CornerRadius = UDim.new(0,8)
 
-local restoreCorner = Instance.new("UICorner"); restoreCorner.CornerRadius = UDim.new(0,8); restoreCorner.Parent = restoreBtn
-
--- helper functions
-local function setStatus(isFlying)
-    if isFlying then
-        statusLabel.Text = "Trạng thái: Đang Bật"
-        statusLabel.TextColor3 = Color3.fromRGB(120,255,120)
-    else
-        statusLabel.Text = "Trạng thái: Đang Tắt"
-        statusLabel.TextColor3 = Color3.fromRGB(255,180,180)
-    end
-end
-
-local function setSpeedLabel(v)
-    speedLabel.Text = "Tốc độ: "..tostring(v)
-end
-
--- fly logic
-local bv, bg -- will hold instances when flying
-local function startFlying()
-    if disabled then return end
-    if flying then return end
-    flying = true
-    setStatus(true)
-
-    if not humanoidRootPart or not humanoidRootPart.Parent then
-        humanoidRootPart = getRoot()
-    end
-
-    bv = Instance.new("BodyVelocity")
-    bv.Name = "FlyVelocity"
-    bv.MaxForce = Vector3.new(1e5,1e5,1e5)
-    bv.Velocity = Vector3.zero
-    bv.Parent = humanoidRootPart
-
-    bg = Instance.new("BodyGyro")
-    bg.Name = "FlyGyro"
-    bg.MaxTorque = Vector3.new(1e5,1e5,1e5)
-    bg.CFrame = humanoidRootPart.CFrame
-    bg.Parent = humanoidRootPart
-
-    task.spawn(function()
-        while flying and bv and bg and bv.Parent and bg.Parent do
-            task.wait()
-            local move = Vector3.zero
-            if UserInputService:IsKeyDown(Enum.KeyCode.W) then move += workspace.CurrentCamera.CFrame.LookVector end
-            if UserInputService:IsKeyDown(Enum.KeyCode.S) then move -= workspace.CurrentCamera.CFrame.LookVector end
-            if UserInputService:IsKeyDown(Enum.KeyCode.A) then move -= workspace.CurrentCamera.CFrame.RightVector end
-            if UserInputService:IsKeyDown(Enum.KeyCode.D) then move += workspace.CurrentCamera.CFrame.RightVector end
-            if UserInputService:IsKeyDown(Enum.KeyCode.Space) then move += Vector3.new(0,1,0) end
-            if UserInputService:IsKeyDown(Enum.KeyCode.LeftControl) then move -= Vector3.new(0,1,0) end
-
-            if move.Magnitude > 0 then
-                move = move.Unit * flySpeed
-            else
-                move = Vector3.zero
-            end
-
-            if bv then bv.Velocity = move end
-            if bg then
-                local camCf = workspace.CurrentCamera.CFrame
-                bg.CFrame = CFrame.new(humanoidRootPart.Position, humanoidRootPart.Position + camCf.LookVector)
-            end
-        end
-    end)
-end
-
-local function stopFlying()
-    if not flying then return end
-    flying = false
-    setStatus(false)
-    if bv and bv.Parent then bv:Destroy() end
-    if bg and bg.Parent then bg:Destroy() end
-    bv, bg = nil, nil
-end
-
--- minimize / restore behavior
-local function minimize()
-    if isMinimized then return end
-    isMinimized = true
-    -- hide content except header -> reduce frame height
-    frame.Size = UDim2.new(0, 140, 0, 34)
-    -- hide body children (status, labels, speedBox, info)
-    statusLabel.Visible = false
-    speedLabel.Visible = false
-    speedBox.Visible = false
-    infoLabel.Visible = false
-    -- show restore button GUI
-    restoreBtn.Visible = true
-end
-
-local function restore()
-    if not isMinimized then return end
-    isMinimized = false
-    frame.Size = isMaximized and UDim2.new(0, 520, 0, 220) or UDim2.new(0, 260, 0, 110)
-    statusLabel.Visible = true
-    speedLabel.Visible = true
-    speedBox.Visible = true
-    infoLabel.Visible = true
-    restoreBtn.Visible = false
-end
-
--- maximize / unmaximize
-local function maximize()
-    if isMaximized then
-        -- unmaximize
-        isMaximized = false
-        frame.Size = UDim2.new(0, 260, 0, 110)
-        -- adjust font sizes (optional)
-        title.TextSize = 16
-        statusLabel.TextSize = 14
-        speedLabel.TextSize = 14
-    else
-        -- maximize
-        isMaximized = true
-        frame.Size = UDim2.new(0, 520, 0, 220)
-        title.TextSize = 20
-        statusLabel.TextSize = 18
-        speedLabel.TextSize = 18
-    end
-end
-
--- disable/close script
-local function closeAll()
-    -- stop flying if active
-    stopFlying()
-    disabled = true
-    -- destroy GUIs
-    if screenGui and screenGui.Parent then screenGui:Destroy() end
-    if restoreGui and restoreGui.Parent then restoreGui:Destroy() end
-    -- unbind any state if needed (we won't disconnect InputBegan listener here because it's local and lightweight;
-    --  but disabled flag prevents further action)
-end
-
--- connect UI buttons
-btnMin.MouseButton1Click:Connect(function()
-    minimize()
-end)
-restoreBtn.MouseButton1Click:Connect(function()
-    restore()
-end)
-btnMax.MouseButton1Click:Connect(function()
-    maximize()
-end)
-btnClose.MouseButton1Click:Connect(function()
-    closeAll()
-end)
-
--- toggle by F key
-UserInputService.InputBegan:Connect(function(input, processed)
-    if processed or disabled then return end
-    if input.KeyCode == Enum.KeyCode.F then
-        if flying then
-            stopFlying()
-        else
-            startFlying()
-        end
-    end
-end)
-
--- speed input handling
-speedBox.FocusLost:Connect(function(enterPressed)
-    if not enterPressed or disabled then return end
-    local txt = speedBox.Text or ""
-    local num = tonumber(txt)
-    if not num then
-        infoLabel.Text = "Giá trị không hợp lệ. Nhập số."
-        task.delay(2, function() if infoLabel then infoLabel.Text = "Nhấn F để bật/tắt. Enter để lưu tốc độ." end end)
-        return
-    end
-    num = math.clamp(math.floor(num), minSpeed, maxSpeed)
-    flySpeed = num
-    setSpeedLabel(flySpeed)
-    infoLabel.Text = "Đã cập nhật tốc độ: "..tostring(flySpeed)
-    task.delay(2, function() if infoLabel then infoLabel.Text = "Nhấn F để bật/tắt. Enter để lưu tốc độ." end end)
-end)
-
--- initialize labels
-setStatus(false)
-setSpeedLabel(flySpeed)
-
--- cleanup safety: if player leaves or script disabled, ensure objects removed
-player.AncestryChanged:Connect(function(_, parent)
-    if not parent then
-    -- 🛡️ Chế độ Bảo Vệ (Hợp pháp) - thêm vào cuối script
-
--- tạo nút Bảo Vệ
+-- 🛡️ God Mode Button
 local protectButton = Instance.new("TextButton")
-protectButton.Name = "ProtectButton"
-protectButton.Size = UDim2.new(0, 120, 0, 36)
-protectButton.Position = UDim2.new(0.5, -60, 1, -45)
+protectButton.Size = UDim2.new(0, 130, 0, 34)
+protectButton.Position = UDim2.new(0.5, -65, 1, -45)
 protectButton.AnchorPoint = Vector2.new(0.5, 1)
 protectButton.Text = "🛡️ Bảo vệ: TẮT"
 protectButton.Font = Enum.Font.SourceSansBold
@@ -355,51 +154,162 @@ protectButton.TextSize = 16
 protectButton.BackgroundColor3 = Color3.fromRGB(80, 50, 50)
 protectButton.TextColor3 = Color3.fromRGB(255, 200, 200)
 protectButton.Parent = frame
-
-local protectCorner = Instance.new("UICorner")
-protectCorner.CornerRadius = UDim.new(0, 8)
-protectCorner.Parent = protectButton
+Instance.new("UICorner", protectButton).CornerRadius = UDim.new(0,8)
 
 local protectOn = false
+local glow = Instance.new("UIStroke")
+glow.Thickness = 1.5
+glow.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
+glow.Color = Color3.fromRGB(255,100,100)
+glow.Parent = protectButton
 
--- hiệu ứng chuyển màu khi bật/tắt
 local function updateProtectButton()
 	if protectOn then
 		protectButton.BackgroundColor3 = Color3.fromRGB(50, 90, 50)
 		protectButton.TextColor3 = Color3.fromRGB(180, 255, 180)
 		protectButton.Text = "🟢 Bảo vệ: BẬT"
+		glow.Color = Color3.fromRGB(120,255,120)
 	else
 		protectButton.BackgroundColor3 = Color3.fromRGB(80, 50, 50)
 		protectButton.TextColor3 = Color3.fromRGB(255, 200, 200)
 		protectButton.Text = "🔴 Bảo vệ: TẮT"
+		glow.Color = Color3.fromRGB(255,100,100)
 	end
 end
 
--- bật/tắt khi nhấn
 protectButton.MouseButton1Click:Connect(function()
 	protectOn = not protectOn
 	updateProtectButton()
-
 	local char = player.Character
 	if not char then return end
 	local humanoid = char:FindFirstChildOfClass("Humanoid")
 	if not humanoid then return end
 
 	if protectOn then
-		-- tắt chết (bảo vệ an toàn)
 		humanoid:SetStateEnabled(Enum.HumanoidStateType.Dead, false)
-		humanoid.MaxHealth = 999999
-		humanoid.Health = 999999
+		humanoid.MaxHealth = math.huge
+		humanoid.Health = math.huge
 	else
-		-- bật lại chết
 		humanoid:SetStateEnabled(Enum.HumanoidStateType.Dead, true)
 		humanoid.MaxHealth = 100
 		humanoid.Health = 100
 	end
 end)
-
 updateProtectButton()
 
-        closeAll()
-    end
+-- Functions
+local function setStatus(isFlying)
+	if isFlying then
+		statusLabel.Text = "Trạng thái: Đang Bật"
+		statusLabel.TextColor3 = Color3.fromRGB(120,255,120)
+	else
+		statusLabel.Text = "Trạng thái: Đang Tắt"
+		statusLabel.TextColor3 = Color3.fromRGB(255,180,180)
+	end
+end
+local function setSpeedLabel(v)
+	speedLabel.Text = "Tốc độ: "..tostring(v)
+end
+
+-- Fly Logic
+local bv, bg
+local function startFlying()
+	if disabled or flying then return end
+	flying = true
+	setStatus(true)
+
+	bv = Instance.new("BodyVelocity")
+	bv.MaxForce = Vector3.new(1e5,1e5,1e5)
+	bv.Velocity = Vector3.zero
+	bv.Parent = humanoidRootPart
+
+	bg = Instance.new("BodyGyro")
+	bg.MaxTorque = Vector3.new(1e5,1e5,1e5)
+	bg.CFrame = humanoidRootPart.CFrame
+	bg.Parent = humanoidRootPart
+
+	task.spawn(function()
+		while flying do
+			task.wait()
+			local move = Vector3.zero
+			if UserInputService:IsKeyDown(Enum.KeyCode.W) then move += workspace.CurrentCamera.CFrame.LookVector end
+			if UserInputService:IsKeyDown(Enum.KeyCode.S) then move -= workspace.CurrentCamera.CFrame.LookVector end
+			if UserInputService:IsKeyDown(Enum.KeyCode.A) then move -= workspace.CurrentCamera.CFrame.RightVector end
+			if UserInputService:IsKeyDown(Enum.KeyCode.D) then move += workspace.CurrentCamera.CFrame.RightVector end
+			if UserInputService:IsKeyDown(Enum.KeyCode.Space) then move += Vector3.new(0,1,0) end
+			if UserInputService:IsKeyDown(Enum.KeyCode.LeftControl) then move -= Vector3.new(0,1,0) end
+			if move.Magnitude > 0 then move = move.Unit * flySpeed end
+			bv.Velocity = move
+			bg.CFrame = CFrame.new(humanoidRootPart.Position, humanoidRootPart.Position + workspace.CurrentCamera.CFrame.LookVector)
+		end
+	end)
+end
+
+local function stopFlying()
+	flying = false
+	setStatus(false)
+	if bv then bv:Destroy() end
+	if bg then bg:Destroy() end
+end
+
+-- GUI Controls
+local function minimize()
+	isMinimized = true
+	frame.Size = UDim2.new(0, 140, 0, 34)
+	for _,v in pairs(frame:GetChildren()) do
+		if v ~= header then v.Visible = false end
+	end
+	restoreBtn.Visible = true
+end
+
+local function restore()
+	isMinimized = false
+	frame.Size = isMaximized and UDim2.new(0, 520, 0, 220) or UDim2.new(0, 260, 0, 140)
+	for _,v in pairs(frame:GetChildren()) do
+		v.Visible = true
+	end
+	restoreBtn.Visible = false
+end
+
+local function maximize()
+	isMaximized = not isMaximized
+	frame.Size = isMaximized and UDim2.new(0, 520, 0, 220) or UDim2.new(0, 260, 0, 140)
+end
+
+local function closeAll()
+	stopFlying()
+	screenGui:Destroy()
+	restoreGui:Destroy()
+end
+
+btnMin.MouseButton1Click:Connect(minimize)
+restoreBtn.MouseButton1Click:Connect(restore)
+btnMax.MouseButton1Click:Connect(maximize)
+btnClose.MouseButton1Click:Connect(closeAll)
+
+-- Hotkeys
+UserInputService.InputBegan:Connect(function(input, processed)
+	if processed or disabled then return end
+	if input.KeyCode == Enum.KeyCode.F then
+		if flying then stopFlying() else startFlying() end
+	end
 end)
+
+-- Speed Box
+speedBox.FocusLost:Connect(function(enterPressed)
+	if not enterPressed or disabled then return end
+	local num = tonumber(speedBox.Text)
+	if not num then
+		infoLabel.Text = "Giá trị không hợp lệ!"
+		task.delay(2, function() infoLabel.Text = "Nhấn F để bật/tắt. Enter để lưu tốc độ." end)
+		return
+	end
+	num = math.clamp(math.floor(num), minSpeed, maxSpeed)
+	flySpeed = num
+	setSpeedLabel(flySpeed)
+	infoLabel.Text = "Đã cập nhật tốc độ: "..tostring(flySpeed)
+	task.delay(2, function() infoLabel.Text = "Nhấn F để bật/tắt. Enter để lưu tốc độ." end)
+end)
+
+setStatus(false)
+setSpeedLabel(flySpeed)
