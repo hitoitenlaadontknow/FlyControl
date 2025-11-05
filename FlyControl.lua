@@ -21,7 +21,7 @@ end)
 -- state
 local flying = false
 local flySpeed = 80
-local minSpeed, maxSpeed = 10, 500
+local minSpeed, maxSpeed = 10, -1
 local disabled = false -- when true, script stops and GUI removed
 local isMaximized = false
 local isMinimized = false
