@@ -1,4 +1,4 @@
---//===[ Power Control GUI: Fly + Speed + Noclip + God + ESP ]===--
+--//===[ Power Control GUI: Fly + Speed + Noclip + God + ESP Advanced ]===--
 
 local Players = game:GetService("Players")
 local UIS = game:GetService("UserInputService")
@@ -14,7 +14,7 @@ ScreenGui.Name = "PowerControlUI"
 ScreenGui.ResetOnSpawn = false
 
 local Frame = Instance.new("Frame", ScreenGui)
-Frame.Size = UDim2.new(0, 220, 0, 320)
+Frame.Size = UDim2.new(0, 220, 0, 350)
 Frame.Position = UDim2.new(0.05, 0, 0.25, 0)
 Frame.BackgroundColor3 = Color3.fromRGB(25, 25, 25)
 Frame.BorderSizePixel = 0
@@ -43,10 +43,10 @@ local CloseBtn = CreateTopButton("x", UDim2.new(0, 75, 0, 5))
 
 HideBtn.MouseButton1Click:Connect(function() Frame.Visible = false end)
 ResizeBtn.MouseButton1Click:Connect(function()
-	if Frame.Size == UDim2.new(0,220,0,320) then
-		Frame.Size = UDim2.new(0,110,0,160)
+	if Frame.Size == UDim2.new(0,220,0,350) then
+		Frame.Size = UDim2.new(0,110,0,175)
 	else
-		Frame.Size = UDim2.new(0,220,0,320)
+		Frame.Size = UDim2.new(0,220,0,350)
 	end
 end)
 CloseBtn.MouseButton1Click:Connect(function() ScreenGui:Destroy() end)
@@ -151,7 +151,7 @@ SpeedBox.FocusLost:Connect(function(enter)
 	SpeedBox.Text = ""
 end)
 
---// Speed Walk
+--// WalkSpeed
 local SpeedBtn = CreateButton("Speed: OFF", Color3.fromRGB(55,55,55))
 SpeedBtn.MouseButton1Click:Connect(function()
 	if hum.WalkSpeed < 1000 then
@@ -198,7 +198,7 @@ GodBtn.MouseButton1Click:Connect(function()
 	end
 end)
 
---// ESP Player
+--// ESP Advanced
 local ESPBtn = CreateButton("ESP: OFF", Color3.fromRGB(55,55,55))
 ESPBtn.MouseButton1Click:Connect(function()
 	espEnabled = not espEnabled
@@ -206,27 +206,45 @@ ESPBtn.MouseButton1Click:Connect(function()
 	ESPBtn.BackgroundColor3 = espEnabled and Color3.fromRGB(255,255,0) or Color3.fromRGB(55,55,55)
 
 	if not espEnabled then
-		for _, box in pairs(espBoxes) do
-			if box and box.Parent then box:Destroy() end
+		for _, info in pairs(espBoxes) do
+			if info.Box then info.Box:Destroy() end
+			if info.Text then info.Text.Parent:Destroy() end
 		end
 		espBoxes = {}
 	end
 end)
 
-local function createESPBox(targetChar)
+local function createESP(targetChar)
 	if espBoxes[targetChar] then return espBoxes[targetChar] end
 	local part = targetChar:FindFirstChild("HumanoidRootPart")
 	if not part then return end
+
+	-- Box
 	local box = Instance.new("BoxHandleAdornment")
 	box.Adornee = part
 	box.AlwaysOnTop = true
 	box.ZIndex = 5
 	box.Size = Vector3.new(2,5,1)
-	box.Color3 = Color3.fromRGB(255,0,0)
 	box.Transparency = 0.5
+	box.Color3 = targetChar:FindFirstChildOfClass("Humanoid") and Color3.fromRGB(0,255,0) or Color3.fromRGB(255,0,0)
 	box.Parent = targetChar
-	espBoxes[targetChar] = box
-	return box
+
+	-- BillboardGui: tên + khoảng cách
+	local bill = Instance.new("BillboardGui", part)
+	bill.Adornee = part
+	bill.AlwaysOnTop = true
+	bill.Size = UDim2.new(0,100,0,50)
+	bill.StudsOffset = Vector3.new(0,3,0)
+	local txt = Instance.new("TextLabel", bill)
+	txt.Size = UDim2.new(1,0,1,0)
+	txt.BackgroundTransparency = 1
+	txt.TextColor3 = Color3.fromRGB(255,255,0)
+	txt.Font = Enum.Font.GothamBold
+	txt.TextSize = 14
+	txt.Text = targetChar.Name
+
+	espBoxes[targetChar] = {Box = box, Text = txt}
+	return espBoxes[targetChar]
 end
 
 --// Main loop
@@ -252,7 +270,14 @@ RS.RenderStepped:Connect(function(delta)
 	if espEnabled then
 		for _, plr in pairs(Players:GetPlayers()) do
 			if plr ~= player and plr.Character and plr.Character:FindFirstChild("HumanoidRootPart") then
-				createESPBox(plr.Character)
+				local info = createESP(plr.Character)
+				if info and info.Text then
+					local dist = math.floor((hrp.Position - plr.Character.HumanoidRootPart.Position).Magnitude)
+					info.Text.Text = plr.Name.." | "..dist.." studs"
+					local teamColor = plr.Team and plr.Team.TeamColor.Color or Color3.fromRGB(255,255,0)
+					info.Box.Color3 = teamColor
+					info.Text.TextColor3 = teamColor
+				end
 			end
 		end
 	end
@@ -260,9 +285,10 @@ end)
 
 Players.PlayerRemoving:Connect(function(plr)
 	if espBoxes[plr.Character] then
-		espBoxes[plr.Character]:Destroy()
+		if espBoxes[plr.Character].Box then espBoxes[plr.Character].Box:Destroy() end
+		if espBoxes[plr.Character].Text then espBoxes[plr.Character].Text.Parent:Destroy() end
 		espBoxes[plr.Character] = nil
 	end
 end)
 
-print("⚡ PowerControl GUI Loaded Successfully!")
+print("⚡ PowerControl GUI Full Loaded Successfully!")
