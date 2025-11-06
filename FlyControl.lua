@@ -1,6 +1,5 @@
--- FlyControl.lua
--- LocalScript content (client-side). Put into StarterPlayerScripts if you want local run,
--- or require it from a Module depending on your setup.
+-- Fly Control with minimize, restore bar, maximize and close (LocalScript)
+-- Put in StarterPlayerScripts
 
 local Players = game:GetService("Players")
 local UserInputService = game:GetService("UserInputService")
@@ -338,33 +337,6 @@ end)
 -- initialize labels
 setStatus(false)
 setSpeedLabel(flySpeed)
-
--- add mobile toggle button (kept unobtrusive)
-local mobileToggle = Instance.new("TextButton")
-mobileToggle.Size = UDim2.new(0, 180, 0, 30)
-mobileToggle.Position = UDim2.new(0, 40, 1, -36)
-mobileToggle.BackgroundColor3 = Color3.fromRGB(60, 120, 200)
-mobileToggle.TextColor3 = Color3.fromRGB(255, 255, 255)
-mobileToggle.Font = Enum.Font.SourceSansBold
-mobileToggle.TextSize = 16
-mobileToggle.Text = "🛫 Bật Bay (Mobile)"
-mobileToggle.Parent = frame
-local mobileCorner = Instance.new("UICorner")
-mobileCorner.CornerRadius = UDim.new(0, 6)
-mobileCorner.Parent = mobileToggle
-
-mobileToggle.MouseButton1Click:Connect(function()
-    if disabled then return end
-    if flying then
-        stopFlying()
-        mobileToggle.Text = "🛫 Bật Bay (Mobile)"
-        mobileToggle.BackgroundColor3 = Color3.fromRGB(60, 120, 200)
-    else
-        startFlying()
-        mobileToggle.Text = "🛬 Tắt Bay (Mobile)"
-        mobileToggle.BackgroundColor3 = Color3.fromRGB(200, 80, 80)
-    end
-end)
 
 -- cleanup safety: if player leaves or script disabled, ensure objects removed
 player.AncestryChanged:Connect(function(_, parent)
